@@ -403,7 +403,7 @@ void* build_from_xmlnode(const XmlNode& elem) {
             else if( ref.id == get_type_id<double>()      )  *static_cast<double*>(      ref.ptr) = std::stod(it->second.front());
             else if( ref.id == get_type_id<std::string>() )  *static_cast<std::string*>( ref.ptr) = it->second.front();
             else if( ref.id == get_type_id<bool>()        )  *static_cast<bool*>(        ref.ptr) = (it->second.front() == "true");
-            else if( f->type->constructor ) {
+            else if( f->type->constructor && f->isTrivial ) {
                 // Створюємо об’єкт типу поля (наприклад sf::Vector2i)
                 //void* fieldObj = f->constructor();
 
@@ -422,8 +422,16 @@ void* build_from_xmlnode(const XmlNode& elem) {
                     // deserializeObject(fieldObj, elem.child(f->name));
                 }
 
+                if(f->type->destructor) { 
+                    f->type->destructor(fieldObj); 
+                } else {
+                    std::cout << "has no destructor type  - " << type->name << "; id - "  << type->id << "; size - " << type->size << "\n\n";
+                }
+
                 // Звільняємо тимчасову пам’ять (якщо конструктор виділяв через ::operator new)
                 ::operator delete(fieldObj);
+            } else {
+                 assert(false && "I can't parse this type!");
             }
         }
     }

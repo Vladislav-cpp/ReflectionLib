@@ -51,6 +51,7 @@ struct Field {
     size_t offset = 0;                       // Зміщення поля в структурі
     using ValueFunc = AnyRef(*)(void*);
     ValueFunc value = nullptr;
+	bool isTrivial = false;
 //    using ConstructorFunc = void* (*)();     // Опціонально: для побудови типу
 //    ConstructorFunc constructor = nullptr;
 };
@@ -160,6 +161,10 @@ class Reflection {
 
 	public:
 	// Реєстрація парсера для типу
+
+	//  reflection::Ref.register_type_parser<  // type // >([](void* ptr, const std::vector<std::string>& vec) {
+	//         *static_cast< // type* //  >(ptr) = // cast from vec // ;
+    //  });
 	template<typename T>
 	void register_type_parser(ParseFunc func) {
 		m_xTypeParsers[ get_type_id<T>() ] = func;
@@ -170,7 +175,7 @@ class Reflection {
 		auto it = m_xTypeParsers.find(id);
 
 		if( it == m_xTypeParsers.end() ) {
-			std::string messeg {"Reflection error: not found type id "};
+			std::string messeg {"Reflection error: not found type id Parser "};
 			std::cerr << messeg << id << "\n";
 			throw std::runtime_error( messeg + std::to_string(id) );
 			return false;
@@ -199,6 +204,8 @@ class Reflection {
 			&(reinterpret_cast<ClassT const volatile*>(0)->*PtrToField)
 		);
 		f.value = &value_func<PtrToField>;
+
+		f.isTrivial = std::is_trivially_copyable_v<FieldT>;
 
 		//f.constructor = []() -> void* {
 		//	void* mem = ::operator new(sizeof(FieldT));
