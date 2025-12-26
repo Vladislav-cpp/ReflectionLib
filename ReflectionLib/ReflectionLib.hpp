@@ -308,19 +308,20 @@ Type* get_type() {
 		// видаляємо "class " або "struct " якщо вони є
 		constexpr std::string_view class_kw = "class ";
 		constexpr std::string_view struct_kw = "struct ";
+		constexpr std::string_view enum_kw = "enum ";
 
 		if (raw.rfind(class_kw, 0) == 0)		raw.erase(0, class_kw.size());
 		else if (raw.rfind(struct_kw, 0) == 0)	raw.erase(0, struct_kw.size());
+		else if (raw.rfind(enum_kw, 0) == 0)	raw.erase(0, enum_kw.size());
 
 		t.name = std::move(raw);
 		t.id = next_type_id();
 	
 		//static_assert(std::is_default_constructible_v<T>,	"Type T must be default constructible to use reflection");
-		t.constructor = &erased_constructor<U>;
 
-		if constexpr (!std::is_trivially_destructible_v<U>)	t.destructor = &erased_destructor<U>;
-		//Ref.m_xRegisters_TypeId_Type[t.id] = &t;
-		//Ref.m_xRegisters_Name_TypeId[t.name] = t.id;
+		t.constructor = &erased_constructor<U>;
+		t.destructor = &erased_destructor<U>;
+
 	}
 
 	return &t;
